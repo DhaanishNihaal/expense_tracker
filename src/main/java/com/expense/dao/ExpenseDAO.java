@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 public class ExpenseDAO {
     private static final String SELECT_ALL = "SELECT * FROM categories";
     private static final String SELECT_EXP = "SELECT * FROM expenses";
+    private static final String SELECT_EXP_BY_ID = "SELECT * FROM expenses WHERE category_id = ?";
     private static final String ADD_CATEGORY = "INSERT INTO categories (category_name) VALUES (?)";
     private static final String FILTER_NAMES = "SELECT category_name FROM categories";
     private static final String GET_CATEGORY_ID = "SELECT category_id FROM categories WHERE category_name = ?";
@@ -23,6 +24,9 @@ public class ExpenseDAO {
     private static final String GET_CATEGORY_NAME = "SELECT category_name FROM categories WHERE category_id = ?";
     private static final String DELETE_EXPENSE = "DELETE FROM expenses WHERE expense_id = ?";
     private static final String UPDATE_EXPENSE = "UPDATE expenses SET expense_name = ?,description = ?, amount = ?, category_id = ?,expense_date = ? WHERE expense_id = ?";
+    private static final String GET_TOTAL_AMOUNT = "SELECT SUM(amount) FROM expenses WHERE category_id = ?";
+    private static final String GET_TOTAL_AMOUNT_ALL = "SELECT SUM(amount)  FROM expenses";
+
 
     private Category getCategoryRow(ResultSet rs) throws SQLException{
         int id = rs.getInt("category_id");
@@ -56,6 +60,7 @@ public class ExpenseDAO {
         return cats;
     }
 
+
     public List<Expense> getAllExpenses() throws SQLException
     {
         List<Expense> exps = new ArrayList<>();
@@ -69,7 +74,20 @@ public class ExpenseDAO {
             }
         return exps;
     }
-
+    public List<Expense> getExpensesByCategory(int id) throws SQLException
+    {
+        List<Expense> exps = new ArrayList<>();
+        try(
+            Connection con = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = con.prepareStatement(SELECT_EXP_BY_ID)) {
+                stmt.setInt(1,id);
+                ResultSet rs = stmt.executeQuery();
+                while(rs.next()){
+                    exps.add(getExpenseRow(rs));
+                }
+            }
+        return exps;
+    }
     public void addCategory( String name) throws SQLException{
         try(
             Connection con = DatabaseConnection.getDBConnection();
@@ -166,5 +184,32 @@ public class ExpenseDAO {
             return rows>0;
         }
 
+    }
+    public double getTotalAmount(int catID) throws SQLException{
+        double total = 0.0;
+        try(
+            Connection con = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = con.prepareStatement(GET_TOTAL_AMOUNT)) {
+                stmt.setInt(1, catID);
+                ResultSet rs = stmt.executeQuery();
+                if(rs.next()){
+                    total = rs.getDouble(1);
+                }
+            }
+
+        return total;
+    }
+    public double getTotalAmountAll() throws SQLException{
+        double total = 0.0;
+        try(
+            Connection con = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = con.prepareStatement(GET_TOTAL_AMOUNT_ALL)) {
+                ResultSet rs = stmt.executeQuery();
+                if(rs.next()){
+                    total = rs.getDouble(1);
+                }
+            }
+
+        return total;
     }
 }

@@ -187,6 +187,7 @@ class ExpenseUI extends JFrame {
     private JButton addButton;
     private JButton updateButton;
     private JButton deleteButton;
+    private JLabel totalLabel;
     private JComboBox<String> filterComboBox;
     private JComboBox<String> categoryComboBox;
     private JTextField amountField;
@@ -213,7 +214,7 @@ class ExpenseUI extends JFrame {
         descriptionArea = new JTextArea(2, 10);
         amountField = new JTextField(20);
         addButton = new JButton("Add Expense");
-        updateButton = new JButton("Update Expense");
+        updateButton = new JButton("edit Expense");
         deleteButton = new JButton("Delete Expense");
         filterComboBox = new JComboBox<>(filteroptions(0));
         categoryComboBox = new JComboBox<>(filteroptions(1));
@@ -221,6 +222,7 @@ class ExpenseUI extends JFrame {
         dateSpinner = new JSpinner(dateModel);
         dateEditor = new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd");
         dateSpinner.setEditor(dateEditor);
+        totalLabel = new JLabel("Total: " + getTotalAmount());
 
         dateSpinner.setPreferredSize(new Dimension(150, 25));
 
@@ -302,29 +304,50 @@ class ExpenseUI extends JFrame {
         northPanel.add(buttonPanel,BorderLayout.SOUTH);
         northPanel.add(filterPanel,BorderLayout.NORTH);
 
+        JPanel totalPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        totalPanel.add(totalLabel);
 
         add(northPanel,BorderLayout.NORTH);
         add(new JScrollPane(expenseTable),BorderLayout.CENTER);
+        add(totalPanel, BorderLayout.SOUTH);
 
     }
     private void setUpListeners() {
         addButton.addActionListener(e -> addExpense());
         updateButton.addActionListener(e -> updateExpense());
         deleteButton.addActionListener(e -> deleteExpense());
-        // filterComboBox.addActionListener(e -> filterExpenses());
+        filterComboBox.addActionListener(e -> filterExpenses());
     }
     
     private void loadExpense() {
         try{
             List<Expense> expenses = expenseDAO.getAllExpenses();
             updateExpenseTable(expenses);
+            totalLabel.setText("Total: " + getTotalAmount());
+            filterComboBox.setModel(new DefaultComboBoxModel<>(filteroptions(0)));
         }
         catch(Exception e){
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Failed to load expenses: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+    private void filterExpenses(){
+        String cateString = (String) filterComboBox.getSelectedItem();
+        if(cateString.equals("All")){
+            loadExpense();
+            return;
+        }
+        try{
+            int categoryID = expenseDAO.getCategoryId(cateString);
+            List<Expense> expenses = expenseDAO.getExpensesByCategory(categoryID);
+            updateExpenseTable(expenses);
+            totalLabel.setText("Total: " + getTotalAmount());
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to filter expenses: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
     private void updateExpenseTable(List<Expense> expenses) {
         expenseTableModel.setRowCount(0);
         for (Expense expense : expenses) {
@@ -381,7 +404,9 @@ class ExpenseUI extends JFrame {
 
         Expense expense = new Expense(title, description, amount,categoryID,date);
         expenseDAO.addExpense(expense);
+        clearInputFields();
         loadExpense();
+        filterComboBox.setModel(new DefaultComboBoxModel<>(filteroptions(0)));
         } 
         catch (Exception e) 
         {
@@ -400,6 +425,7 @@ class ExpenseUI extends JFrame {
             expenseDAO.deleteExpense(id);
             loadExpense();
             clearInputFields();
+            filterComboBox.setModel(new DefaultComboBoxModel<>(filteroptions(0)));
             JOptionPane.showMessageDialog(this,"Deleted Succesfully","Deleted Successfully",JOptionPane.INFORMATION_MESSAGE);
         }
         catch(SQLException e){
@@ -426,6 +452,7 @@ class ExpenseUI extends JFrame {
             if(expenseDAO.updateExpense(expense)){
             clearInputFields();
             loadExpense();
+            filterComboBox.setModel(new DefaultComboBoxModel<>(filteroptions(0)));
             JOptionPane.showMessageDialog(this,"row updated","Success",JOptionPane.INFORMATION_MESSAGE);
             }
             else{
@@ -444,5 +471,23 @@ class ExpenseUI extends JFrame {
         categoryComboBox.setSelectedIndex(0);
         dateSpinner.setValue(new Date());
     }
+    
+    private String getTotalAmount(){
+        try{
+        String cateString = (String) filterComboBox.getSelectedItem();
+        if(cateString.equals("All")){
+            double total = expenseDAO.getTotalAmountAll();
+            return String.format("%.2f", total);
+        }
+        int id = expenseDAO.getCategoryId(cateString);
+        double total = expenseDAO.getTotalAmount(id);
+        return String.format("%.2f", total);
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+        }
+        return "0.00";
+    }
+
 }
 
