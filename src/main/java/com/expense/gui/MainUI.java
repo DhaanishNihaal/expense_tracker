@@ -224,6 +224,15 @@ class ExpenseUI extends JFrame {
             }
         };
         expenseTable = new JTable(expenseTableModel);
+        expenseTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        expenseTable.getSelectionModel().addListSelectionListener(
+            (e)->{
+                if(!expenseTable.getValueIsAdjusting()){
+                    loadSelectedExpense();
+                }
+            }
+        )
+
     }
     
     private void setupLayout() {
@@ -293,7 +302,7 @@ class ExpenseUI extends JFrame {
     private void setUpListeners() {
         addButton.addActionListener(e -> addExpense());
         // updateButton.addActionListener(e -> updateExpense());
-        deleteButton.addActionListener(e -> deleteExpense());
+        // deleteButton.addActionListener(e -> deleteExpense());
         // filterComboBox.addActionListener(e -> filterExpenses());
     }
     
@@ -326,7 +335,16 @@ class ExpenseUI extends JFrame {
         }
     }
     }
-    
+    private void loadSelectedExpense(){
+        int selectedRow = expenseTable.getSelectedRow();
+        if(selectedRow >= 0){
+            titleField.setText(expenseTableModel.getValueAt(selectedRow, 1).toString());
+            descriptionArea.setText(expenseTableModel.getValueAt(selectedRow, 2).toString());
+            amountField.setText(expenseTableModel.getValueAt(selectedRow, 3).toString());
+            categoryComboBox.setSelectedItem(expenseTableModel.getValueAt(selectedRow, 4).toString());
+            dateSpinner.setValue(expenseTableModel.getValueAt(selectedRow, 5));
+        }
+    }
     private String[] filteroptions(int type){
         try{
             List<String> list = expenseDAO.getAllcatnames();
@@ -363,6 +381,6 @@ class ExpenseUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Failed to add expense: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    private void 
+    
 }
 
