@@ -1,6 +1,8 @@
 package com.expense.gui;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.DefaultTableModel;
 import com.expense.model.Category;
 import com.expense.model.Expense;
@@ -189,6 +191,8 @@ class ExpenseUI extends JFrame {
     private JComboBox<String> categoryComboBox;
     private JTextField amountField;
     private JSpinner dateSpinner;
+    private SpinnerDateModel dateModel;
+    private JSpinner.DateEditor dateEditor;
 
     public ExpenseUI() {
         this.expenseDAO = new ExpenseDAO();
@@ -213,6 +217,12 @@ class ExpenseUI extends JFrame {
         deleteButton = new JButton("Delete Expense");
         filterComboBox = new JComboBox<>(filteroptions(0));
         categoryComboBox = new JComboBox<>(filteroptions(1));
+        dateModel = new SpinnerDateModel();
+        dateSpinner = new JSpinner(dateModel);
+        dateEditor = new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd");
+        dateSpinner.setEditor(dateEditor);
+
+        dateSpinner.setPreferredSize(new Dimension(150, 25));
 
 
 
@@ -226,12 +236,12 @@ class ExpenseUI extends JFrame {
         expenseTable = new JTable(expenseTableModel);
         expenseTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         expenseTable.getSelectionModel().addListSelectionListener(
-            (e)->{
-                if(!expenseTable.getValueIsAdjusting()){
-                    loadSelectedExpense();
-                }
-            }
-        )
+                (ListSelectionEvent e) -> {
+        if(!e.getValueIsAdjusting()){  // Call on the event parameter
+            loadSelectedExpense(); 
+        }
+    }
+);
 
     }
     
@@ -272,8 +282,6 @@ class ExpenseUI extends JFrame {
         gbc.gridy=5;
         inputPanel.add(new JLabel("Date"),gbc);
         gbc.gridx=1;
-        dateSpinner = new JSpinner(new SpinnerDateModel());
-        dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd HH:mm:ss"));
         inputPanel.add(dateSpinner,gbc);
 
 
@@ -296,13 +304,13 @@ class ExpenseUI extends JFrame {
 
 
         add(northPanel,BorderLayout.NORTH);
-
         add(new JScrollPane(expenseTable),BorderLayout.CENTER);
+
     }
     private void setUpListeners() {
         addButton.addActionListener(e -> addExpense());
-        // updateButton.addActionListener(e -> updateExpense());
-        // deleteButton.addActionListener(e -> deleteExpense());
+        updateButton.addActionListener(e -> updateExpense());
+        deleteButton.addActionListener(e -> deleteExpense());
         // filterComboBox.addActionListener(e -> filterExpenses());
     }
     
@@ -381,6 +389,60 @@ class ExpenseUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Failed to add expense: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+    private void deleteExpense(){
+        int Row = expenseTable.getSelectedRow();
+        if(Row < 0){
+            JOptionPane.showMessageDialog(this, "Please select an expense to delete.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        int id = (int) expenseTable.getValueAt(Row, 0);
+        try{
+            expenseDAO.deleteExpense(id);
+            loadExpense();
+            clearInputFields();
+            JOptionPane.showMessageDialog(this,"Deleted Succesfully","Deleted Successfully",JOptionPane.INFORMATION_MESSAGE);
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to delete expense: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    private void updateExpense(){
+        int row = expenseTable.getSelectedRow();
+        if(row == -1){
+            JOptionPane.showMessageDialog(this,"Please select a row to update","error",JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try{
+        int id = (int) expenseTable.getValueAt(row,0);
+        String title = titleField.getText().trim();
+        String desc = descriptionArea.getText().trim();
+        int category = expenseDAO.getCategoryId((String)categoryComboBox.getSelectedItem());
+        double amount = Double.parseDouble(amountField.getText().trim());
+        Date date = (Date) dateSpinner.getValue();
+
+        Expense expense = new Expense(id,title,desc,amount,category,date);
+
+            if(expenseDAO.updateExpense(expense)){
+            clearInputFields();
+            loadExpense();
+            JOptionPane.showMessageDialog(this,"row updated","Success",JOptionPane.INFORMATION_MESSAGE);
+            }
+            else{
+                JOptionPane.showMessageDialog(this,"No rows updated","error",JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        catch(SQLException e){
+            JOptionPane.showMessageDialog(this, "Failed to Update expense: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+
+        }
+    }
+    private void clearInputFields(){
+        titleField.setText("");
+        descriptionArea.setText("");
+        amountField.setText("");
+        categoryComboBox.setSelectedIndex(0);
+        dateSpinner.setValue(new Date());
+    }
 }
 

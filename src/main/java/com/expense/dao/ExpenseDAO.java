@@ -21,6 +21,8 @@ public class ExpenseDAO {
     private static final String GET_CATEGORY_ID = "SELECT category_id FROM categories WHERE category_name = ?";
     private static final String ADD_EXPENSE = "INSERT INTO expenses (expense_name,description,amount, category_id, expense_date) VALUES (?, ?, ?, ?, ?)";
     private static final String GET_CATEGORY_NAME = "SELECT category_name FROM categories WHERE category_id = ?";
+    private static final String DELETE_EXPENSE = "DELETE FROM expenses WHERE expense_id = ?";
+    private static final String UPDATE_EXPENSE = "UPDATE expenses SET expense_name = ?,description = ?, amount = ?, category_id = ?,expense_date = ? WHERE expense_id = ?";
 
     private Category getCategoryRow(ResultSet rs) throws SQLException{
         int id = rs.getInt("category_id");
@@ -135,5 +137,34 @@ public class ExpenseDAO {
             }
         }
         
+    }
+    public void deleteExpense(int id) throws SQLException{
+        try(
+            Connection con = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = con.prepareStatement(DELETE_EXPENSE)
+        ){
+            stmt.setInt(1, id);
+            int rowsAffected = stmt.executeUpdate();
+            if(rowsAffected == 0){
+                throw new SQLException("Deleting expense failed, no rows affected.");
+            }
+        }
+    }
+
+    public boolean updateExpense(Expense expense) throws SQLException{
+        try(
+            Connection conn = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = conn.prepareStatement(UPDATE_EXPENSE);
+        ){
+            stmt.setString(1,expense.getName());
+            stmt.setString(2,expense.getDescription());
+            stmt.setDouble(3,expense.getAmount());
+            stmt.setInt(4,expense.getCategoryId());
+            stmt.setDate(5, new java.sql.Date(expense.getDate().getTime()));
+            stmt.setInt(6,expense.getId());
+            int rows = stmt.executeUpdate();
+            return rows>0;
+        }
+
     }
 }
