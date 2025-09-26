@@ -62,11 +62,11 @@ public class MainUI extends JFrame{
 class CategoryUI extends JFrame{
 
     private JButton addCategory;
+    private JButton deleteCategory;
+    private JButton updateCategory;
     private JTable categoryTable;
     private DefaultTableModel categoryTableModel;
     private JTextField categoryName;
-    private DefaultTableModel expenseTableModel;
-    private JTable expenseTable;
     private ExpenseDAO expenseDAO;
 
 
@@ -87,6 +87,8 @@ class CategoryUI extends JFrame{
         setSize(1000, 800);
         setLocationRelativeTo(null);
         addCategory = new JButton("Add Category");
+        deleteCategory = new JButton("Delete Category");
+        updateCategory = new JButton("Update Category");
         
         // categoryTableModel = new DefaultTableModel();
         categoryName = new JTextField(20);
@@ -99,15 +101,12 @@ class CategoryUI extends JFrame{
         };
         categoryTable = new JTable(categoryTableModel);
         categoryTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        // categoryTable.getSelectionModel().addListSelectionListener(
-        //     (e)->{
-        //         if(!categoryTable.getValueIsAdjusting()){
-        //             loadSelectedCategory();
-        //         }
-        //     }
-        // );
-
-        
+        categoryTable.getSelectionModel().addListSelectionListener
+                ( e -> {
+        if(!e.getValueIsAdjusting()){  // Call on the event parameter
+            loadSelectedCategory();
+        }
+    });
     }
     private void setupLayout(){
         setLayout(new BorderLayout());
@@ -126,15 +125,16 @@ class CategoryUI extends JFrame{
         gbc.fill = GridBagConstraints.HORIZONTAL;
         inputPanel.add(categoryName,gbc);
         
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        inputPanel.add(addCategory,gbc);
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(addCategory);
+        buttonPanel.add(deleteCategory);
+        buttonPanel.add(updateCategory);
+
 
 
         JPanel northPanel = new JPanel(new BorderLayout());
         northPanel.add(inputPanel,BorderLayout.CENTER);
-
+        northPanel.add(buttonPanel,BorderLayout.SOUTH);
         add(northPanel,BorderLayout.NORTH);
         add(new JScrollPane(categoryTable),BorderLayout.CENTER);
         
@@ -142,6 +142,8 @@ class CategoryUI extends JFrame{
     
     private void setUpEventListeners(){
         addCategory.addActionListener((e)->{addCategory();});
+        updateCategory.addActionListener((e)->{updateCategory();});
+        deleteCategory.addActionListener((e)->{deleteCategory();});
     }
     private void loadCategory(){
         try{
@@ -151,6 +153,12 @@ class CategoryUI extends JFrame{
         catch(Exception e){
             e.printStackTrace(); // This will print the detailed SQL error to the console
             JOptionPane.showMessageDialog(this, "Failed to load categories: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    private void loadSelectedCategory(){
+        int row = categoryTable.getSelectedRow();
+        if(row >= 0){
+            categoryName.setText(categoryTableModel.getValueAt(row, 1).toString());
         }
     }
             
@@ -174,6 +182,58 @@ class CategoryUI extends JFrame{
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Failed to add category: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+    private void updateCategory(){
+        int row = categoryTable.getSelectedRow();
+        if(row == -1){
+            JOptionPane.showMessageDialog(this,"Please select a row to update","error",JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        int id = (int) categoryTable.getValueAt(row,0);
+        String name = categoryName.getText().trim();
+        if(name.isEmpty()){
+            JOptionPane.showMessageDialog(this, "Category name cannot be empty", "Input Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try{
+            if(expenseDAO.updateCategory(id,name)){
+            loadCategory();
+            clearInputFields();
+            JOptionPane.showMessageDialog(this,"row updated","Success",JOptionPane.INFORMATION_MESSAGE);
+            }
+            else{
+                JOptionPane.showMessageDialog(this,"No rows updated","error",JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        catch(SQLException e){
+            JOptionPane.showMessageDialog(this, "Failed to Update category: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+
+        }
+    }
+    private void deleteCategory(){
+        int row = categoryTable.getSelectedRow();
+        if(row < 0){
+            JOptionPane.showMessageDialog(this, "Please select a category to delete.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try{
+            int id = (int) categoryTable.getValueAt(row,0);
+            if(expenseDAO.deleteCategory(id)){
+                loadCategory();
+                clearInputFields();
+                JOptionPane.showMessageDialog(this,"Deleted Succesfully","Deleted Successfully",JOptionPane.INFORMATION_MESSAGE);
+            }
+            else{
+                JOptionPane.showMessageDialog(this,"Cannot delete category with associated expenses","Error",JOptionPane.ERROR_MESSAGE);
+            }   
+        }
+        catch(SQLException e){
+            JOptionPane.showMessageDialog(this, "Failed to delete category: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void clearInputFields(){
+        categoryName.setText("");
     }
 
 }
@@ -237,8 +297,8 @@ class ExpenseUI extends JFrame {
         };
         expenseTable = new JTable(expenseTableModel);
         expenseTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        expenseTable.getSelectionModel().addListSelectionListener(
-                (ListSelectionEvent e) -> {
+        expenseTable.getSelectionModel().addListSelectionListener
+                ( e -> {
         if(!e.getValueIsAdjusting()){  // Call on the event parameter
             loadSelectedExpense(); 
         }

@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 public class ExpenseDAO {
+
     private static final String SELECT_ALL = "SELECT * FROM categories";
     private static final String SELECT_EXP = "SELECT * FROM expenses";
     private static final String SELECT_EXP_BY_ID = "SELECT * FROM expenses WHERE category_id = ?";
@@ -26,6 +27,9 @@ public class ExpenseDAO {
     private static final String UPDATE_EXPENSE = "UPDATE expenses SET expense_name = ?,description = ?, amount = ?, category_id = ?,expense_date = ? WHERE expense_id = ?";
     private static final String GET_TOTAL_AMOUNT = "SELECT SUM(amount) FROM expenses WHERE category_id = ?";
     private static final String GET_TOTAL_AMOUNT_ALL = "SELECT SUM(amount)  FROM expenses";
+    private static final String UPDATE_CATEGORY = "UPDATE categories SET category_name = ? WHERE category_id = ?";
+    private static final String DELETE_CATEGORY = "DELETE FROM categories WHERE category_id = ?";
+    private static final String DELETE_EXPENSES_BY_CATEGORY = "DELETE FROM expenses WHERE category_id = ?";
 
 
     private Category getCategoryRow(ResultSet rs) throws SQLException{
@@ -100,7 +104,31 @@ public class ExpenseDAO {
             }
         }
     }
-
+    public boolean updateCategory(int id,String name) throws SQLException{
+        try(
+            Connection conn = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = conn.prepareStatement(UPDATE_CATEGORY);
+        ){
+            stmt.setString(1,name);
+            stmt.setInt(2,id);
+            int rows = stmt.executeUpdate();
+            return rows>0;
+        }
+    }
+    public boolean deleteCategory(int id) throws SQLException{
+        try(
+            Connection conn = DatabaseConnection.getDBConnection();
+            PreparedStatement Stmt1 = conn.prepareStatement(DELETE_CATEGORY);
+            PreparedStatement Stmt2 = conn.prepareStatement(DELETE_EXPENSES_BY_CATEGORY);
+        ){
+            Stmt1.setInt(1,id);            Stmt2.setInt(1,id);
+            Stmt2.setInt(1,id);
+            Stmt2.executeUpdate();
+            int rows2=Stmt1.executeUpdate();
+            return rows2>0;
+        }
+    }
+        
     public List<String> getAllcatnames() throws SQLException{
         List<String> names = new ArrayList<>();
         try(
