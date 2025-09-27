@@ -92,7 +92,7 @@ class CategoryUI extends JFrame{
         
         // categoryTableModel = new DefaultTableModel();
         categoryName = new JTextField(20);
-        String[] columns = {"ID","Name"};
+        String[] columns = {"ID","Name","Nunber of Expenses"};
         categoryTableModel = new DefaultTableModel(columns,0){
             @Override
             public boolean isCellEditable(int row, int column){
@@ -165,7 +165,7 @@ class CategoryUI extends JFrame{
     private void updateCategoryTable(List<Category> categories) {
         categoryTableModel.setRowCount(0);
         for (Category c : categories) {
-            categoryTableModel.addRow(new Object[]{c.getId(), c.getName()});
+            categoryTableModel.addRow(new Object[]{c.getId(), c.getName(),getExpenseCount(c.getId())});
         }
     }
     private void addCategory(){
@@ -231,7 +231,15 @@ class CategoryUI extends JFrame{
             JOptionPane.showMessageDialog(this, "Failed to delete category: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
+    private int getExpenseCount(int categoryId){
+        try{
+            return expenseDAO.getExpenseCountByCategory(categoryId);
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+        }
+        return 0;
+    }
     private void clearInputFields(){
         categoryName.setText("");
     }

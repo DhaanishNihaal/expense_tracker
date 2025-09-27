@@ -30,6 +30,7 @@ public class ExpenseDAO {
     private static final String UPDATE_CATEGORY = "UPDATE categories SET category_name = ? WHERE category_id = ?";
     private static final String DELETE_CATEGORY = "DELETE FROM categories WHERE category_id = ?";
     private static final String DELETE_EXPENSES_BY_CATEGORY = "DELETE FROM expenses WHERE category_id = ?";
+    private static final String COUNT_EXPENSES_BY_CATEGORY = "SELECT COUNT(*) FROM expenses WHERE category_id = ?";
 
 
     private Category getCategoryRow(ResultSet rs) throws SQLException{
@@ -166,6 +167,19 @@ public class ExpenseDAO {
                 }
             }
         return name;
+    }
+    public int getExpenseCountByCategory(int categoryId) throws SQLException{
+        int count = 0;
+        try(
+            Connection con = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = con.prepareStatement(COUNT_EXPENSES_BY_CATEGORY)) {
+                stmt.setInt(1, categoryId);
+                ResultSet rs = stmt.executeQuery();
+                if(rs.next()){
+                    count = rs.getInt(1);
+                }
+            }
+        return count;
     }
     public void addExpense(Expense expense) throws SQLException{
         try(
