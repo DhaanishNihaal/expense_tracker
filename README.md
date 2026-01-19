@@ -1,38 +1,68 @@
 # Expense Tracker
 
-A simple Java-based Expense Tracker application that helps users manage and track their expenses efficiently.
+A Java-based Expense Tracker application that helps users manage and track their expenses efficiently.
 
-##  About
-This project allows users to record and categorize daily expenses, view balances, and monitor spending habits. It’s built using Java and follows a clean structure for easy extension and learning.
+## 📋 About
+This project allows users to record and categorize daily expenses, view balances, and monitor spending habits. Built with Java and MySQL, it features a Swing GUI for an intuitive desktop experience.
 
 ## 🛠️ Features
 - Add new expense entries with details like amount, category, and date
-- View a list of all recorded expenses
-- Simple and intuitive interface
+- View and manage all recorded expenses
+- MySQL database for persistent data storage
+- Desktop GUI built with Java Swing
 - Organized codebase for maintainability and future enhancements
 
-##  Getting Started
+## 🚀 Getting Started
 
-###  Prerequisites
+### Prerequisites
 Make sure you have the following installed:
-- Java (JDK 8 or above)
-- Maven (for build and dependency management)
+- **Java JDK 17** or above
+- **Maven** (for build and dependency management)
+- **MySQL Server** (for database)
 
-###  Installation & Run
+### Installation & Run
+
 1. **Clone the repository**
    ```bash
    git clone https://github.com/DhaanishNihaal/expense_tracker.git
-Navigate to the project folder
+   ```
 
-cd expense_tracker
-Build and run using Maven
+2. **Navigate to the project folder**
+   ```bash
+   cd expense_tracker
+   ```
 
-mvn clean install
-mvn spring-boot:run
-Open the application in your browser (if it’s a web app) or run the main class through your IDE.
+3. **Set up database configuration**
+   - Create a `.env` file in the project root (if needed)
+   - Configure your MySQL database credentials
 
-📁 Project Structure
+4. **Run the application using Maven**
+   ```bash
+   mvn clean compile exec:java
+   ```
+
+   **Or build and run as JAR:**
+   ```bash
+   mvn clean package
+   java -jar target/todo-app-0.0.1-SNAPSHOT.jar
+   ```
+
+## 📁 Project Structure
+```
 expense_tracker/
-├── src/…
+├── src/
+│   └── main/java/com/expense/
+├── assets/
 ├── pom.xml
 └── README.md
+```
+
+## 💻 Technologies Used
+- Java 17
+- MySQL Database
+- Java Swing (GUI)
+- Maven
+- dotenv-java (environment configuration)
+
+## 📝 License
+This project is open source and available for educational purposes.
