@@ -57,6 +57,17 @@ expense_tracker/
 └── README.md
 ```
 
+## 📸 Screenshots
+
+### Main Interface
+![Main Interface](assets/Screenshot%202026-01-19%20113042.png)
+
+### Expense Management
+![Expense Management](assets/Screenshot%202026-01-19%20113121.png)
+
+### Application View
+![Application View](assets/Screenshot%202026-01-19%20113159.png)
+
 ## 💻 Technologies Used
 - Java 17
 - MySQL Database
